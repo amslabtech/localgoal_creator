@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(rwrc22_localgoal_creator)
+project(localgoal_creator)
 
 find_package(catkin REQUIRED COMPONENTS
 roscpp

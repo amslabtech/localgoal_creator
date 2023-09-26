@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
     <arg name="bagfile" default="/share/share/RWRC/rwrc22/ikuta/ikuta_mcl3dl_2022-09-09-20-04-55.bag"/>
-    <arg name="node_edge_map_file" default="$(find rwrc22_localgoal_creator)/map/graph/rwrc22_ikuta_map.yaml"/>
-    <arg name="checkpoint_file" default="$(find rwrc22_localgoal_creator)/map/checkpoint/rwrc22_ikuta_checkpoint.yaml"/>
+    <arg name="node_edge_map_file" default="$(find localgoal_creator)/map/graph/ikuta_map.yaml"/>
+    <arg name="checkpoint_file" default="$(find localgoal_creator)/map/checkpoint/ikuta_checkpoint.yaml"/>
 
     <rosparam param="/use_sim_time">true</rosparam>
 
-    <include file="$(find rwrc22_localgoal_creator)/launch/localgoal_creator.launch">
+    <include file="$(find localgoal_creator)/launch/localgoal_creator.launch">
         <arg name="start_node" value="39"/>
         <arg name="goal_node" value="39"/>
         <arg name="stop_radius_min" value="0.5"/>
@@ -27,5 +27,5 @@
     </node>
 
     <node pkg="rosbag" type="play" name="rosbag_play" args="$(arg bagfile) -r 3"/>
-    <node pkg="rviz" type="rviz" name="localgoal_rviz" args="-d $(find rwrc22_localgoal_creator)/config/test.rviz"/>
+    <node pkg="rviz" type="rviz" name="localgoal_rviz" args="-d $(find localgoal_creator)/config/test.rviz"/>
 </launch>
