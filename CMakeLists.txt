@@ -7,6 +7,7 @@ rospy
 amsl_navigation_msgs
 std_msgs
 geometry_msgs
+nav_msgs
 tf2
 tf2_ros
 )
