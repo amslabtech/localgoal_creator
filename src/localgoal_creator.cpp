@@ -24,9 +24,11 @@ LocalGoalCreator::LocalGoalCreator() : nh_(),
     checkpoint_received_ = false;
     node_edge_map_received_ = false;
     current_pose_updated_ = false;
+    reached_checkpoint_flag_ = false;
     current_checkpoint_id_ = start_node_;
     next_checkpoint_id_ = start_node_;
     local_goal_index_ = 0;
+    path_.poses.clear();
 }
 
 void LocalGoalCreator::node_edge_map_callback(const amsl_navigation_msgs::NodeEdgeMap::ConstPtr &msg)
@@ -72,11 +74,15 @@ void LocalGoalCreator::local_goal_dist_callback(const std_msgs::Float64::ConstPt
 
 int LocalGoalCreator::get_index_from_node_id(int target_id)
 {
-    const auto target_itr = find(checkpoint_.data.begin(), checkpoint_.data.end(), target_id);
-    const int index = distance(checkpoint_.data.begin(), target_itr);
-    if (index == checkpoint_.data.size())
-        return -1;
-    return index;
+    int index = 0;
+    for (const auto node : node_edge_map_.nodes)
+    {
+        if (node.id == target_id)
+            return index;
+
+        index++;
+    }
+    return -1;
 }
 
 void LocalGoalCreator::update_checkpoint()
@@ -99,6 +105,7 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
     geometry_msgs::Point reference_pose = node_edge_map_.nodes[current_node_index].point;
     const geometry_msgs::Point target_pose = node_edge_map_.nodes[next_node_index].point;
     const double direction = atan2(target_pose.y - reference_pose.y, target_pose.x - reference_pose.x);
+    path_.poses.clear();
 
     while (true)
     {
@@ -157,13 +164,19 @@ void LocalGoalCreator::process()
     {
         if (checkpoint_received_ && node_edge_map_received_ && current_pose_updated_)
         {
+            if (path_.poses.empty() && !checkpoint_.data.empty())
+            {
+                get_path_to_next_checkpoint();
+            }
             if (reached_checkpoint_flag_ && !checkpoint_.data.empty())
             {
                 update_checkpoint();
                 get_path_to_next_checkpoint();
+                reached_checkpoint_flag_ = false;
             }
             publish_local_goal();
             publish_checkpoint_id();
+            current_pose_updated_ = false;
         }
         ros::spinOnce();
         rate.sleep();
