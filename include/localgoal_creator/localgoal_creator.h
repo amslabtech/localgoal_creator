@@ -46,7 +46,7 @@ class LocalGoalCreator
         bool checkpoint_received_;
         bool node_edge_map_received_;
         bool current_pose_updated_;
-        bool prev_reached_checkpoint_flag_;
+        bool is_end_of_path_;
         bool update_checkpoint_flag_;
         int current_checkpoint_id_;
         int next_checkpoint_id_;

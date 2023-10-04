@@ -24,7 +24,7 @@ LocalGoalCreator::LocalGoalCreator() : nh_(),
     checkpoint_received_ = false;
     node_edge_map_received_ = false;
     current_pose_updated_ = false;
-    prev_reached_checkpoint_flag_ = false;
+    is_end_of_path_ = false;
     update_checkpoint_flag_ = false;
     current_checkpoint_id_ = start_node_;
     next_checkpoint_id_ = start_node_;
@@ -65,9 +65,8 @@ void LocalGoalCreator::current_pose_callback(const geometry_msgs::PoseWithCovari
 
 void LocalGoalCreator::reached_checkpoint_flag_callback(const std_msgs::Bool::ConstPtr &msg)
 {
-    if (prev_reached_checkpoint_flag_ == false && msg->data == true)
+    if (is_end_of_path_ && msg->data == true)
         update_checkpoint_flag_ = true;
-    prev_reached_checkpoint_flag_ = msg->data;
 }
 
 void LocalGoalCreator::local_goal_dist_callback(const std_msgs::Float64::ConstPtr &msg)
@@ -107,22 +106,46 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
     const int next_node_index = get_index_from_node_id(next_checkpoint_id_);
     geometry_msgs::Point reference_pose = node_edge_map_.nodes[current_node_index].point;
     const geometry_msgs::Point target_pose = node_edge_map_.nodes[next_node_index].point;
+    const double distance_between_nodes = hypot(target_pose.x - reference_pose.x, target_pose.y - reference_pose.y);
     const double direction = atan2(target_pose.y - reference_pose.y, target_pose.x - reference_pose.x);
     path_.poses.clear();
 
-    while (true)
+    bool enable_get_path;
+    double interval;
+    if (distance_between_nodes == 0)
     {
         geometry_msgs::PoseStamped pose;
         pose.header.frame_id = current_pose_.header.frame_id;
-        pose.pose.position.x = reference_pose.x + local_goal_interval_ * cos(direction);
-        pose.pose.position.y = reference_pose.y + local_goal_interval_ * sin(direction);
+        pose.pose.position.x = target_pose.x;
+        pose.pose.position.y = target_pose.y;
+        pose.pose.position.z = 0;
+        pose.pose.orientation = current_pose_.pose.orientation;
+        path_.poses.push_back(pose);
+        enable_get_path = false;
+    }
+    else if (distance_between_nodes < local_goal_interval_)
+    {
+        interval = distance_between_nodes;
+        enable_get_path = true;
+    }
+    else
+    {
+        interval = local_goal_interval_;
+        enable_get_path = true;
+    }
+
+    while (enable_get_path)
+    {
+        geometry_msgs::PoseStamped pose;
+        pose.header.frame_id = current_pose_.header.frame_id;
+        pose.pose.position.x = reference_pose.x + interval * cos(direction);
+        pose.pose.position.y = reference_pose.y + interval * sin(direction);
         pose.pose.position.z = 0;
         pose.pose.orientation = tf::createQuaternionMsgFromYaw(direction);
         path_.poses.push_back(pose);
 
         const double distance_to_target = hypot(pose.pose.position.x - target_pose.x, pose.pose.position.y - target_pose.y);
-        if (distance_to_target < local_goal_interval_)
-            break;
+        enable_get_path = (interval < distance_to_target);
 
         reference_pose = pose.pose.position;
     }
@@ -138,6 +161,8 @@ void LocalGoalCreator::publish_local_goal()
         if (distance_to_local_goal < local_goal_dist_)
             local_goal_index_ = i;
     }
+
+    is_end_of_path_ = (local_goal_index_ == path_.poses.size()-1);
 
     geometry_msgs::PoseStamped local_goal;
     local_goal.header.frame_id = current_pose_.header.frame_id;
