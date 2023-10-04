@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rwrc22_localgoal_creator</name>
+  <name>localgoal_creator</name>
   <version>0.0.0</version>
-  <description>The rwrc22_localgoal_creator package</description>
+  <description>The localgoal_creator package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
