@@ -24,7 +24,8 @@ LocalGoalCreator::LocalGoalCreator() : nh_(),
     checkpoint_received_ = false;
     node_edge_map_received_ = false;
     current_pose_updated_ = false;
-    reached_checkpoint_flag_ = false;
+    prev_reached_checkpoint_flag_ = false;
+    update_checkpoint_flag_ = false;
     current_checkpoint_id_ = start_node_;
     next_checkpoint_id_ = start_node_;
     local_goal_index_ = 0;
@@ -64,7 +65,9 @@ void LocalGoalCreator::current_pose_callback(const geometry_msgs::PoseWithCovari
 
 void LocalGoalCreator::reached_checkpoint_flag_callback(const std_msgs::Bool::ConstPtr &msg)
 {
-    reached_checkpoint_flag_ = msg->data;
+    if (prev_reached_checkpoint_flag_ == false && msg->data == true)
+        update_checkpoint_flag_ = true;
+    prev_reached_checkpoint_flag_ = msg->data;
 }
 
 void LocalGoalCreator::local_goal_dist_callback(const std_msgs::Float64::ConstPtr &msg)
@@ -152,9 +155,9 @@ void LocalGoalCreator::publish_checkpoint_id()
     std_msgs::Int32 current_checkpoint_id_msg;
     std_msgs::Int32 next_checkpoint_id_msg;
     current_checkpoint_id_msg.data = current_checkpoint_id_;
-    current_checkpoint_id_msg.data = next_checkpoint_id_;
+    next_checkpoint_id_msg.data = next_checkpoint_id_;
     current_checkpoint_id_pub_.publish(current_checkpoint_id_msg);
-    current_checkpoint_id_pub_.publish(next_checkpoint_id_msg);
+    next_checkpoint_id_pub_.publish(next_checkpoint_id_msg);
 }
 
 void LocalGoalCreator::process()
@@ -168,11 +171,11 @@ void LocalGoalCreator::process()
             {
                 get_path_to_next_checkpoint();
             }
-            if (reached_checkpoint_flag_ && !checkpoint_.data.empty())
+            if (update_checkpoint_flag_ && !checkpoint_.data.empty())
             {
                 update_checkpoint();
                 get_path_to_next_checkpoint();
-                reached_checkpoint_flag_ = false;
+                update_checkpoint_flag_ = false;
             }
             publish_local_goal();
             publish_checkpoint_id();

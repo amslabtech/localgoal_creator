@@ -30,6 +30,6 @@
         <remap from="/local_goal_dist"    to="$(arg local_goal_dist_topic)"/>
         <remap from="/local_goal"         to="$(arg local_goal_topic)"/>
         <remap from="/current_checkpoint" to="$(arg current_checkpoint_topic)"/>
-        <remap from="/next_checkpoint"    to="$(arg current_checkpoint_topic)"/>
+        <remap from="/next_checkpoint"    to="$(arg next_checkpoint_topic)"/>
     </node>
 </launch>
