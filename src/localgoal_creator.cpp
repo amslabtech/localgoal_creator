@@ -71,6 +71,7 @@ void LocalGoalCreator::reached_checkpoint_flag_callback(const std_msgs::Bool::Co
 
 void LocalGoalCreator::local_goal_dist_callback(const std_msgs::Float64::ConstPtr &msg)
 {
+    ROS_WARN("Update local_goal_dist: %lf -> %lf", local_goal_dist_, msg->data);
     local_goal_dist_ = msg->data;
 }
 
@@ -118,7 +119,7 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
         pose.header.frame_id = current_pose_.header.frame_id;
         pose.pose.position.x = target_pose.x;
         pose.pose.position.y = target_pose.y;
-        pose.pose.position.z = 0;
+        pose.pose.position.z = current_pose_.pose.position.z;
         pose.pose.orientation = current_pose_.pose.orientation;
         path_.poses.push_back(pose);
         enable_get_path = false;
@@ -140,7 +141,7 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
         pose.header.frame_id = current_pose_.header.frame_id;
         pose.pose.position.x = reference_pose.x + interval * cos(direction);
         pose.pose.position.y = reference_pose.y + interval * sin(direction);
-        pose.pose.position.z = 0;
+        pose.pose.position.z = current_pose_.pose.position.z;
         pose.pose.orientation = tf::createQuaternionMsgFromYaw(direction);
         path_.poses.push_back(pose);
 
@@ -169,7 +170,7 @@ void LocalGoalCreator::publish_local_goal()
     local_goal.header.stamp = ros::Time::now();
     local_goal.pose.position.x = path_.poses[local_goal_index_].pose.position.x;
     local_goal.pose.position.y = path_.poses[local_goal_index_].pose.position.y;
-    local_goal.pose.position.z = 0;
+    local_goal.pose.position.z = current_pose_.pose.position.z;
     local_goal.pose.orientation = path_.poses[local_goal_index_].pose.orientation;
 
     local_goal_pub_.publish(local_goal);
