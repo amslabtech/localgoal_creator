@@ -35,6 +35,7 @@ class LocalGoalCreator
         void get_path_to_next_checkpoint();
         void publish_local_goal();
         void publish_checkpoint_id();
+        void publish_path();
 
         // private params
         int hz_;
@@ -58,7 +59,7 @@ class LocalGoalCreator
 
         // ros
         ros::NodeHandle nh_;
-        ros::NodeHandle private_nh_;
+        ros::NodeHandle local_nh_;
         ros::Subscriber checkpoint_sub_;
         ros::Subscriber node_edge_sub_;
         ros::Subscriber current_pose_sub_;
@@ -67,7 +68,7 @@ class LocalGoalCreator
         ros::Publisher local_goal_pub_;
         ros::Publisher current_checkpoint_id_pub_;
         ros::Publisher next_checkpoint_id_pub_;
-
+        ros::Publisher path_pub_;
 };
 
 #endif // __LOCAL_GOAL_CREATOR_H__

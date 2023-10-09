@@ -15,6 +15,7 @@
     <arg name="local_goal_topic"         default="/local_goal"/>
     <arg name="current_checkpoint_topic" default="/current_checkpoint"/>
     <arg name="next_checkpoint_topic"    default="/next_checkpoint"/>
+    <arg name="path_topic"               default="/path"/>
 
     <!-- node -->
     <node pkg="localgoal_creator" type="localgoal_creator_node" name="localgoal_creator_node" output="screen">
@@ -31,5 +32,6 @@
         <remap from="/local_goal"         to="$(arg local_goal_topic)"/>
         <remap from="/current_checkpoint" to="$(arg current_checkpoint_topic)"/>
         <remap from="/next_checkpoint"    to="$(arg next_checkpoint_topic)"/>
+        <remap from="/path"               to="$(arg path_topic)"/>
     </node>
 </launch>
