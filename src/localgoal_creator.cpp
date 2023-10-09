@@ -207,17 +207,16 @@ void LocalGoalCreator::process()
             if (path_.poses.empty() && !checkpoint_.data.empty())
             {
                 get_path_to_next_checkpoint();
-                publish_path();
             }
             if (update_checkpoint_flag_ && !checkpoint_.data.empty())
             {
                 update_checkpoint();
                 get_path_to_next_checkpoint();
                 update_checkpoint_flag_ = false;
-                publish_path();
             }
             publish_local_goal();
             publish_checkpoint_id();
+            publish_path();
             current_pose_updated_ = false;
         }
         ros::spinOnce();
