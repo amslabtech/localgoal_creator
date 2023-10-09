@@ -1,15 +1,14 @@
 #include "localgoal_creator/localgoal_creator.h"
 #include "geometry_msgs/PoseStamped.h"
 
-LocalGoalCreator::LocalGoalCreator() : nh_(),
-                                       private_nh_("~")
+LocalGoalCreator::LocalGoalCreator() : local_nh_("~")
 {
 
     // std::cout<<"============TEST================="<<std::endl;
-    private_nh_.param("hz", hz_, 10);
-    private_nh_.param("start_node", start_node_, 0);
-    private_nh_.param("local_goal_interval", local_goal_interval_, 1.0);
-    private_nh_.param("local_goal_dist", local_goal_dist_, 5.0);
+    local_nh_.param("hz", hz_, 10);
+    local_nh_.param("start_node", start_node_, 0);
+    local_nh_.param("local_goal_interval", local_goal_interval_, 1.0);
+    local_nh_.param("local_goal_dist", local_goal_dist_, 5.0);
 
     checkpoint_sub_ = nh_.subscribe("/checkpoint", 1, &LocalGoalCreator::checkpoint_callback, this);
     node_edge_sub_ = nh_.subscribe("/node_edge_map", 1, &LocalGoalCreator::node_edge_map_callback, this);
@@ -20,6 +19,7 @@ LocalGoalCreator::LocalGoalCreator() : nh_(),
     local_goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/local_goal", 1);
     current_checkpoint_id_pub_ = nh_.advertise<std_msgs::Int32>("/current_checkpoint", 1);
     next_checkpoint_id_pub_ = nh_.advertise<std_msgs::Int32>("/next_checkpoint", 1);
+    path_pub_ = local_nh_.advertise<nav_msgs::Path>("path", 1);
 
     checkpoint_received_ = false;
     node_edge_map_received_ = false;
@@ -117,6 +117,7 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
     {
         geometry_msgs::PoseStamped pose;
         pose.header.frame_id = current_pose_.header.frame_id;
+        pose.header.stamp = ros::Time::now();
         pose.pose.position.x = target_pose.x;
         pose.pose.position.y = target_pose.y;
         pose.pose.position.z = current_pose_.pose.position.z;
@@ -139,6 +140,7 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
     {
         geometry_msgs::PoseStamped pose;
         pose.header.frame_id = current_pose_.header.frame_id;
+        pose.header.stamp = ros::Time::now();
         pose.pose.position.x = reference_pose.x + interval * cos(direction);
         pose.pose.position.y = reference_pose.y + interval * sin(direction);
         pose.pose.position.z = current_pose_.pose.position.z;
@@ -165,15 +167,15 @@ void LocalGoalCreator::publish_local_goal()
 
     is_end_of_path_ = (local_goal_index_ == path_.poses.size()-1);
 
-    geometry_msgs::PoseStamped local_goal;
-    local_goal.header.frame_id = current_pose_.header.frame_id;
-    local_goal.header.stamp = ros::Time::now();
-    local_goal.pose.position.x = path_.poses[local_goal_index_].pose.position.x;
-    local_goal.pose.position.y = path_.poses[local_goal_index_].pose.position.y;
-    local_goal.pose.position.z = current_pose_.pose.position.z;
-    local_goal.pose.orientation = path_.poses[local_goal_index_].pose.orientation;
+    geometry_msgs::PoseStamped local_goal_msg;
+    local_goal_msg.header.frame_id = current_pose_.header.frame_id;
+    local_goal_msg.header.stamp = ros::Time::now();
+    local_goal_msg.pose.position.x = path_.poses[local_goal_index_].pose.position.x;
+    local_goal_msg.pose.position.y = path_.poses[local_goal_index_].pose.position.y;
+    local_goal_msg.pose.position.z = current_pose_.pose.position.z;
+    local_goal_msg.pose.orientation = path_.poses[local_goal_index_].pose.orientation;
 
-    local_goal_pub_.publish(local_goal);
+    local_goal_pub_.publish(local_goal_msg);
 }
 
 void LocalGoalCreator::publish_checkpoint_id()
@@ -186,6 +188,15 @@ void LocalGoalCreator::publish_checkpoint_id()
     next_checkpoint_id_pub_.publish(next_checkpoint_id_msg);
 }
 
+void LocalGoalCreator::publish_path()
+{
+    nav_msgs::Path path_msg;
+    path_msg = path_;
+    path_msg.header.frame_id = current_pose_.header.frame_id;
+    path_msg.header.stamp = ros::Time::now();
+    path_pub_.publish(path_msg);
+}
+
 void LocalGoalCreator::process()
 {
     ros::Rate rate(hz_);
@@ -196,12 +207,14 @@ void LocalGoalCreator::process()
             if (path_.poses.empty() && !checkpoint_.data.empty())
             {
                 get_path_to_next_checkpoint();
+                publish_path();
             }
             if (update_checkpoint_flag_ && !checkpoint_.data.empty())
             {
                 update_checkpoint();
                 get_path_to_next_checkpoint();
                 update_checkpoint_flag_ = false;
+                publish_path();
             }
             publish_local_goal();
             publish_checkpoint_id();

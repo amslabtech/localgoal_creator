@@ -2,7 +2,7 @@
 <launch>
     <arg name="node_edge_map_file" default="/home/amsl/catkin_ws/src/rwrc23/map/graph/ikuta_graph.yaml"/>
     <arg name="checkpoint_file" default="/home/amsl/catkin_ws/src/rwrc23/map/checkpoint/ikuta_full_checkpoint.yaml"/>
-    <arg name="start_node" default="27"/>
+    <arg name="start_node" default="39"/>
     <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/ikuta/ikuta_circuit/ikuta_main_mcl_2023-08-31-16-10-03.bag"/>
     <arg name="map_pcd" default="/share/PCD/ikuta/ikuta_outdoor.pcd"/>
     <arg name="rviz" default="/home/amsl/catkin_ws/src/rwrc23/config/rviz/rviz.rviz"/>
