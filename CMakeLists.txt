@@ -21,6 +21,6 @@ ${catkin_INCLUDE_DIRS}
 
 
 
-add_executable(${PROJECT_NAME}_node src/localgoal_creator_node.cpp src/localgoal_creator.cpp)
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
+add_executable(${PROJECT_NAME} src/localgoal_creator.cpp src/localgoal_creator.cpp)
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
