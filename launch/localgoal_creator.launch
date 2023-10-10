@@ -18,7 +18,7 @@
     <arg name="path_topic"               default="/next_checkpoint"/>
 
     <!-- node -->
-    <node pkg="localgoal_creator" type="localgoal_creator" name="localgoal_creator" output="screen">
+    <node pkg="localgoal_creator" type="localgoal_creator" name="local_goal_creator" output="screen">
         <!-- param -->
         <param name="start_node"          value="$(arg start_node)"/>
         <param name="local_goal_interval" value="$(arg local_goal_interval)"/>
