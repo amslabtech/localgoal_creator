@@ -3,8 +3,6 @@
 
 LocalGoalCreator::LocalGoalCreator() : local_nh_("~")
 {
-
-    // std::cout<<"============TEST================="<<std::endl;
     local_nh_.param("hz", hz_, 10);
     local_nh_.param("start_node", start_node_, 0);
     local_nh_.param("local_goal_interval", local_goal_interval_, 1.0);
@@ -117,10 +115,8 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
     {
         geometry_msgs::PoseStamped pose;
         pose.header.frame_id = current_pose_.header.frame_id;
-        pose.header.stamp = ros::Time::now();
         pose.pose.position.x = target_pose.x;
         pose.pose.position.y = target_pose.y;
-        pose.pose.position.z = current_pose_.pose.position.z;
         pose.pose.orientation = current_pose_.pose.orientation;
         path_.poses.push_back(pose);
         enable_get_path = false;
@@ -140,10 +136,8 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
     {
         geometry_msgs::PoseStamped pose;
         pose.header.frame_id = current_pose_.header.frame_id;
-        pose.header.stamp = ros::Time::now();
         pose.pose.position.x = reference_pose.x + interval * cos(direction);
         pose.pose.position.y = reference_pose.y + interval * sin(direction);
-        pose.pose.position.z = current_pose_.pose.position.z;
         pose.pose.orientation = tf::createQuaternionMsgFromYaw(direction);
         path_.poses.push_back(pose);
 
@@ -192,6 +186,11 @@ void LocalGoalCreator::publish_path()
 {
     nav_msgs::Path path_msg;
     path_msg = path_;
+    for (auto &p: path_msg.poses)
+    {
+        p.pose.position.z = current_pose_.pose.position.z;
+        p.header.stamp = ros::Time::now();
+    }
     path_msg.header.frame_id = current_pose_.header.frame_id;
     path_msg.header.stamp = ros::Time::now();
     path_pub_.publish(path_msg);
