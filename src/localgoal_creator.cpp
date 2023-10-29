@@ -1,5 +1,4 @@
 #include "localgoal_creator/localgoal_creator.h"
-#include "geometry_msgs/PoseStamped.h"
 
 LocalGoalCreator::LocalGoalCreator() : local_nh_("~")
 {
@@ -63,8 +62,7 @@ void LocalGoalCreator::current_pose_callback(const geometry_msgs::PoseWithCovari
 
 void LocalGoalCreator::reached_checkpoint_flag_callback(const std_msgs::Bool::ConstPtr &msg)
 {
-    if (is_end_of_path_ && msg->data == true)
-        update_checkpoint_flag_ = true;
+    update_checkpoint_flag_ = msg->data;
 }
 
 void LocalGoalCreator::local_goal_dist_callback(const std_msgs::Float64::ConstPtr &msg)
@@ -111,7 +109,7 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
 
     bool enable_get_path;
     double interval;
-    if (distance_between_nodes == 0)
+    if (distance_between_nodes < DBL_EPSILON)
     {
         geometry_msgs::PoseStamped pose;
         pose.header.frame_id = current_pose_.header.frame_id;
@@ -148,15 +146,22 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
     }
 }
 
-void LocalGoalCreator::publish_local_goal()
+void LocalGoalCreator::publish_local_goal(geometry_msgs::Point point)
 {
-    for (int i=local_goal_index_; i<path_.poses.size(); i++)
+    geometry_msgs::Point goal_point = path_.poses[local_goal_index_].pose.position;
+    double distance_to_local_goal = hypot(goal_point.x - point.x, goal_point.y - point.y);
+
+    while(distance_to_local_goal < local_goal_dist_)
     {
-        const double goal_pose_x = path_.poses[i].pose.position.x;
-        const double goal_pose_y = path_.poses[i].pose.position.y;
-        const double distance_to_local_goal = hypot(current_pose_.pose.position.x - goal_pose_x, current_pose_.pose.position.y - goal_pose_y);
-        if (distance_to_local_goal < local_goal_dist_)
-            local_goal_index_ = i;
+        local_goal_index_++;
+        goal_point = path_.poses[local_goal_index_].pose.position;
+        distance_to_local_goal = hypot(goal_point.x - point.x, goal_point.y - point.y);
+
+        if(local_goal_index_ == path_.poses.size())
+        {
+            local_goal_index_ = path_.poses.size()-1;
+            break;
+        }
     }
 
     is_end_of_path_ = (local_goal_index_ == path_.poses.size()-1);
@@ -164,8 +169,7 @@ void LocalGoalCreator::publish_local_goal()
     geometry_msgs::PoseStamped local_goal_msg;
     local_goal_msg.header.frame_id = current_pose_.header.frame_id;
     local_goal_msg.header.stamp = ros::Time::now();
-    local_goal_msg.pose.position.x = path_.poses[local_goal_index_].pose.position.x;
-    local_goal_msg.pose.position.y = path_.poses[local_goal_index_].pose.position.y;
+    local_goal_msg.pose.position = path_.poses[local_goal_index_].pose.position;
     local_goal_msg.pose.position.z = current_pose_.pose.position.z;
     local_goal_msg.pose.orientation = path_.poses[local_goal_index_].pose.orientation;
 
@@ -206,14 +210,21 @@ void LocalGoalCreator::process()
             if (path_.poses.empty() && !checkpoint_.data.empty())
             {
                 get_path_to_next_checkpoint();
+                const int current_node_index = get_index_from_node_id(current_checkpoint_id_);
+                geometry_msgs::Point reference_point = node_edge_map_.nodes[current_node_index].point;
+                publish_local_goal(reference_point);
             }
-            if (update_checkpoint_flag_ && !checkpoint_.data.empty())
+            else if (update_checkpoint_flag_ && !checkpoint_.data.empty())
             {
                 update_checkpoint();
                 get_path_to_next_checkpoint();
+                const int current_node_index = get_index_from_node_id(current_checkpoint_id_);
+                geometry_msgs::Point reference_point = node_edge_map_.nodes[current_node_index].point;
+                publish_local_goal(reference_point);
                 update_checkpoint_flag_ = false;
             }
-            publish_local_goal();
+
+            publish_local_goal(current_pose_.pose.position);
             publish_checkpoint_id();
             publish_path();
             current_pose_updated_ = false;
