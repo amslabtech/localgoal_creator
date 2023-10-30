@@ -101,10 +101,10 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
 {
     const int current_node_index = get_index_from_node_id(current_checkpoint_id_);
     const int next_node_index = get_index_from_node_id(next_checkpoint_id_);
-    geometry_msgs::Point reference_pose = node_edge_map_.nodes[current_node_index].point;
-    const geometry_msgs::Point target_pose = node_edge_map_.nodes[next_node_index].point;
-    const double distance_between_nodes = hypot(target_pose.x - reference_pose.x, target_pose.y - reference_pose.y);
-    const double direction = atan2(target_pose.y - reference_pose.y, target_pose.x - reference_pose.x);
+    geometry_msgs::Point reference_point = node_edge_map_.nodes[current_node_index].point;
+    const geometry_msgs::Point target_point = node_edge_map_.nodes[next_node_index].point;
+    const double distance_between_nodes = hypot(target_point.x - reference_point.x, target_point.y - reference_point.y);
+    const double direction = atan2(target_point.y - reference_point.y, target_point.x - reference_point.x);
     path_.poses.clear();
 
     bool enable_get_path;
@@ -113,8 +113,8 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
     {
         geometry_msgs::PoseStamped pose;
         pose.header.frame_id = current_pose_.header.frame_id;
-        pose.pose.position.x = target_pose.x;
-        pose.pose.position.y = target_pose.y;
+        pose.pose.position.x = target_point.x;
+        pose.pose.position.y = target_point.y;
         pose.pose.orientation = current_pose_.pose.orientation;
         path_.poses.push_back(pose);
         enable_get_path = false;
@@ -134,15 +134,15 @@ void LocalGoalCreator::get_path_to_next_checkpoint()
     {
         geometry_msgs::PoseStamped pose;
         pose.header.frame_id = current_pose_.header.frame_id;
-        pose.pose.position.x = reference_pose.x + interval * cos(direction);
-        pose.pose.position.y = reference_pose.y + interval * sin(direction);
+        pose.pose.position.x = reference_point.x + interval * cos(direction);
+        pose.pose.position.y = reference_point.y + interval * sin(direction);
         pose.pose.orientation = tf::createQuaternionMsgFromYaw(direction);
         path_.poses.push_back(pose);
 
-        const double distance_to_target = hypot(pose.pose.position.x - target_pose.x, pose.pose.position.y - target_pose.y);
+        const double distance_to_target = hypot(pose.pose.position.x - target_point.x, pose.pose.position.y - target_point.y);
         enable_get_path = (interval < distance_to_target);
 
-        reference_pose = pose.pose.position;
+        reference_point = pose.pose.position;
     }
 }
 
