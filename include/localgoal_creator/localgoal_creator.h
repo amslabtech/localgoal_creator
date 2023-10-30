@@ -33,7 +33,7 @@ class LocalGoalCreator
         int get_index_from_node_id(int target_id);
         void update_checkpoint();
         void get_path_to_next_checkpoint();
-        void publish_local_goal();
+        void publish_local_goal(geometry_msgs::Point point);
         void publish_checkpoint_id();
         void publish_path();
 
