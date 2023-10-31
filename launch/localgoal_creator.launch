@@ -5,6 +5,7 @@
     <arg name="start_node"          default="0"/>
     <arg name="local_goal_interval" default="1.0"/>
     <arg name="local_goal_dist"     default="5.0"/>
+    <arg name="limit_for_skip"      default="180.0"/>
     <!-- subscribe topic -->
     <arg name="checkpoint_topic"              default="/node_edge_map/checkpoint"/>
     <arg name="node_edge_map_topic"           default="/node_edge_map"/>
@@ -24,6 +25,7 @@
         <param name="start_node"          value="$(arg start_node)"/>
         <param name="local_goal_interval" value="$(arg local_goal_interval)"/>
         <param name="local_goal_dist"     value="$(arg local_goal_dist)"/>
+        <param name="limit_for_skip"      value="$(arg limit_for_skip)"/>
         <!-- topic -->
         <remap from="/checkpoint"         to="$(arg checkpoint_topic)"/>
         <remap from="/node_edge_map"      to="$(arg node_edge_map_topic)"/>
