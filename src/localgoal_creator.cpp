@@ -15,7 +15,7 @@ LocalGoalCreator::LocalGoalCreator() :
     current_pose_sub_ = nh_.subscribe("/current_pose", 1, &LocalGoalCreator::current_pose_callback, this);
     local_goal_dist_sub_ = nh_.subscribe("/local_goal_dist", 1, &LocalGoalCreator::local_goal_dist_callback, this);
     reached_checkpoint_flag_sub_ = nh_.subscribe("/reached_checkpoint", 1, &LocalGoalCreator::reached_checkpoint_flag_callback, this);
-    skip_mode_flag_sub_ = nh_.subscribe("/skip_mode_flag_", 1, &LocalGoalCreator::skip_mode_flag_callback, this);
+    skip_mode_flag_sub_ = nh_.subscribe("/skip_mode_flag", 1, &LocalGoalCreator::skip_mode_flag_callback, this);
 
     local_goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/local_goal", 1);
     current_checkpoint_id_pub_ = nh_.advertise<std_msgs::Int32>("/current_checkpoint", 1);
@@ -213,12 +213,24 @@ void LocalGoalCreator::process()
     {
         if (checkpoint_received_ && node_edge_map_received_ && current_pose_updated_)
         {
+            if (begin_flag)
+            {
+                const int elapsed_time = (ros::Time::now() - begin_for_skip).sec;
+                ROS_WARN_STREAM_THROTTLE(1.0, "Countdown for skip: " << limit_for_skip_ - elapsed_time << " s");
+                if (limit_for_skip_ < elapsed_time)
+                {
+                    update_checkpoint_flag_ = true;
+                    begin_flag = false;
+                }
+            }
+
             if (path_.poses.empty() && !checkpoint_.data.empty())
             {
                 get_path_to_next_checkpoint();
                 const int current_node_index = get_index_from_node_id(current_checkpoint_id_);
                 geometry_msgs::Point reference_point = node_edge_map_.nodes[current_node_index].point;
                 publish_local_goal(reference_point);
+                begin_flag = false;
             }
             else if (update_checkpoint_flag_ && !checkpoint_.data.empty())
             {
@@ -227,6 +239,7 @@ void LocalGoalCreator::process()
                 const int current_node_index = get_index_from_node_id(current_checkpoint_id_);
                 geometry_msgs::Point reference_point = node_edge_map_.nodes[current_node_index].point;
                 publish_local_goal(reference_point);
+                begin_flag = false;
                 update_checkpoint_flag_ = false;
             }
 
@@ -243,16 +256,6 @@ void LocalGoalCreator::process()
             {
                 begin_for_skip = ros::Time::now();
                 begin_flag = true;
-            }
-            if (begin_flag)
-            {
-                const int elapsed_time = (ros::Time::now() - begin_for_skip).sec;
-                ROS_WARN_STREAM_THROTTLE(1.0, "Countdown for skip: " << limit_for_skip_ - elapsed_time);
-                if (limit_for_skip_ < elapsed_time)
-                {
-                    update_checkpoint_flag_ = true;
-                    begin_flag = false;
-                }
             }
         }
         ros::spinOnce();
