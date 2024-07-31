@@ -6,6 +6,7 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
+#include <std_srvs/SetBool.h>
 #include "amsl_navigation_msgs/NodeEdgeMap.h"
 #include "amsl_navigation_msgs/Node.h"
 #include "amsl_navigation_msgs/Edge.h"
@@ -37,6 +38,7 @@ class LocalGoalCreator
         void publish_local_goal(geometry_msgs::Point point);
         void publish_checkpoint_id();
         void publish_path();
+        void call_task_stop();
 
         // private params
         int hz_;
@@ -73,6 +75,7 @@ class LocalGoalCreator
         ros::Publisher current_checkpoint_id_pub_;
         ros::Publisher next_checkpoint_id_pub_;
         ros::Publisher path_pub_;
+        ros::ServiceClient task_stop_client_;
 };
 
 #endif // __LOCAL_GOAL_CREATOR_H__

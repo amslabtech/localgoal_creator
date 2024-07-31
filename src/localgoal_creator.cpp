@@ -22,6 +22,8 @@ LocalGoalCreator::LocalGoalCreator() :
     next_checkpoint_id_pub_ = nh_.advertise<std_msgs::Int32>("/next_checkpoint", 1);
     path_pub_ = local_nh_.advertise<nav_msgs::Path>("path", 1);
 
+    task_stop_client_ = nh_.serviceClient<std_srvs::SetBool>("/task/stop");
+
     current_checkpoint_id_ = start_node_;
     next_checkpoint_id_ = start_node_;
     path_.poses.clear();
@@ -93,6 +95,8 @@ void LocalGoalCreator::update_checkpoint()
     current_checkpoint_id_ = next_checkpoint_id_;
     if (checkpoint_.data.size() > 1)
         next_checkpoint_id_ = *next(itr);
+    else
+        call_task_stop();
     checkpoint_.data.erase(itr);
     local_goal_index_ = 0;
 
@@ -202,6 +206,18 @@ void LocalGoalCreator::publish_path()
     path_msg.header.frame_id = current_pose_.header.frame_id;
     path_msg.header.stamp = ros::Time::now();
     path_pub_.publish(path_msg);
+}
+
+void LocalGoalCreator::call_task_stop()
+{
+    std_srvs::SetBool srv;
+    srv.request.data = true;
+    while (ros::ok() && !task_stop_client_.call(srv))
+    {
+        ROS_WARN("Failed to call task stop service");
+        ros::Duration(0.5).sleep();
+    }
+    ROS_WARN_STREAM(srv.response.message);
 }
 
 void LocalGoalCreator::process()
