@@ -91,7 +91,8 @@ void LocalGoalCreator::update_checkpoint()
 {
     const auto itr = checkpoint_.data.begin();
     current_checkpoint_id_ = next_checkpoint_id_;
-    next_checkpoint_id_ = *next(itr);
+    if (checkpoint_.data.size() > 1)
+        next_checkpoint_id_ = *next(itr);
     checkpoint_.data.erase(itr);
     local_goal_index_ = 0;
 
