@@ -2,16 +2,17 @@ cmake_minimum_required(VERSION 3.0.2)
 project(localgoal_creator)
 
 find_package(catkin REQUIRED COMPONENTS
-roscpp
-rospy
-amsl_navigation_msgs
-std_msgs
-geometry_msgs
-nav_msgs
+  roscpp
+  rospy
+  amsl_navigation_msgs
+  std_msgs
+  std_srvs
+  geometry_msgs
+  nav_msgs
 )
 
 catkin_package(
-INCLUDE_DIRS include
+  INCLUDE_DIRS include
 )
 
 include_directories(
