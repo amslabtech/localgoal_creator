@@ -2,7 +2,7 @@
 
 LocalGoalCreator::LocalGoalCreator() :
     local_nh_("~"), checkpoint_received_(false), node_edge_map_received_(false), current_pose_updated_(false),
-    is_end_of_path_(false), update_checkpoint_flag_(false), enable_skip_mode_(false), local_goal_index_(0)
+    is_end_of_path_(false), update_checkpoint_flag_(false), available_skip_mode_(false), local_goal_index_(0)
 {
     local_nh_.param<int>("hz", hz_, 10);
     local_nh_.param<int>("start_node", start_node_, 0);
@@ -15,13 +15,13 @@ LocalGoalCreator::LocalGoalCreator() :
     current_pose_sub_ = nh_.subscribe("/current_pose", 1, &LocalGoalCreator::current_pose_callback, this);
     local_goal_dist_sub_ = nh_.subscribe("/local_goal_dist", 1, &LocalGoalCreator::local_goal_dist_callback, this);
     reached_checkpoint_flag_sub_ = nh_.subscribe("/reached_checkpoint", 1, &LocalGoalCreator::reached_checkpoint_flag_callback, this);
-    skip_mode_flag_sub_ = nh_.subscribe("/skip_mode_flag", 1, &LocalGoalCreator::skip_mode_flag_callback, this);
 
     local_goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/local_goal", 1);
     current_checkpoint_id_pub_ = nh_.advertise<std_msgs::Int32>("/current_checkpoint", 1);
     next_checkpoint_id_pub_ = nh_.advertise<std_msgs::Int32>("/next_checkpoint", 1);
     path_pub_ = local_nh_.advertise<nav_msgs::Path>("path", 1);
 
+    skip_mode_flag_server_ = local_nh_.advertiseService("skip_mode/avaliable", &LocalGoalCreator::skip_mode_flag_callback, this);
     task_stop_client_ = nh_.serviceClient<std_srvs::SetBool>("/task/stop");
 
     current_checkpoint_id_ = start_node_;
@@ -65,9 +65,15 @@ void LocalGoalCreator::reached_checkpoint_flag_callback(const std_msgs::Bool::Co
     update_checkpoint_flag_ = msg->data;
 }
 
-void LocalGoalCreator::skip_mode_flag_callback(const std_msgs::Bool::ConstPtr& msg)
+bool LocalGoalCreator::skip_mode_flag_callback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res)
 {
-    enable_skip_mode_ = msg->data;
+    available_skip_mode_ = req.data;
+    res.success = true;
+    if (available_skip_mode_)
+        res.message = "Skip mode is available";
+    else
+        res.message = "Skip mode is not available";
+    return true;
 }
 
 void LocalGoalCreator::local_goal_dist_callback(const std_msgs::Float64::ConstPtr &msg)
@@ -269,7 +275,7 @@ void LocalGoalCreator::process()
             const geometry_msgs::Point next_node_point = node_edge_map_.nodes[next_node_index].point;
             const geometry_msgs::Point current_point = current_pose_.pose.position;
             const double dist_to_node = hypot(next_node_point.x - current_point.x, next_node_point.y - current_point.y);
-            if (enable_skip_mode_ && !begin_flag && dist_to_node < local_goal_dist_)
+            if (available_skip_mode_ && !begin_flag && dist_to_node < local_goal_dist_)
             {
                 begin_for_skip = ros::Time::now();
                 begin_flag = true;
