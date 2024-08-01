@@ -14,7 +14,6 @@ LocalGoalCreator::LocalGoalCreator() :
     node_edge_sub_ = nh_.subscribe("/node_edge_map", 1, &LocalGoalCreator::node_edge_map_callback, this);
     current_pose_sub_ = nh_.subscribe("/current_pose", 1, &LocalGoalCreator::current_pose_callback, this);
     local_goal_dist_sub_ = nh_.subscribe("/local_goal_dist", 1, &LocalGoalCreator::local_goal_dist_callback, this);
-    reached_checkpoint_flag_sub_ = nh_.subscribe("/reached_checkpoint", 1, &LocalGoalCreator::reached_checkpoint_flag_callback, this);
 
     local_goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/local_goal", 1);
     current_checkpoint_id_pub_ = nh_.advertise<std_msgs::Int32>("/current_checkpoint", 1);
@@ -22,6 +21,7 @@ LocalGoalCreator::LocalGoalCreator() :
     path_pub_ = local_nh_.advertise<nav_msgs::Path>("path", 1);
 
     skip_mode_flag_server_ = local_nh_.advertiseService("skip_mode/avaliable", &LocalGoalCreator::skip_mode_flag_callback, this);
+    update_flag_server_ = local_nh_.advertiseService("update", &LocalGoalCreator::update_flag_callback, this);
     task_stop_client_ = nh_.serviceClient<std_srvs::SetBool>("/task/stop");
 
     current_checkpoint_id_ = start_node_;
@@ -60,11 +60,6 @@ void LocalGoalCreator::current_pose_callback(const geometry_msgs::PoseWithCovari
     }
 }
 
-void LocalGoalCreator::reached_checkpoint_flag_callback(const std_msgs::Bool::ConstPtr &msg)
-{
-    update_checkpoint_flag_ = msg->data;
-}
-
 bool LocalGoalCreator::skip_mode_flag_callback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res)
 {
     available_skip_mode_ = req.data;
@@ -73,6 +68,14 @@ bool LocalGoalCreator::skip_mode_flag_callback(std_srvs::SetBool::Request &req, 
         res.message = "Skip mode is available";
     else
         res.message = "Skip mode is not available";
+    return true;
+}
+
+bool LocalGoalCreator::update_flag_callback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+{
+    update_checkpoint_flag_ = true;
+    res.success = true;
+    res.message = "Checkpoint will be updated";
     return true;
 }
 
