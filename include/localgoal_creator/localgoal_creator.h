@@ -6,6 +6,7 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
+#include <std_srvs/Trigger.h>
 #include <std_srvs/SetBool.h>
 #include "amsl_navigation_msgs/NodeEdgeMap.h"
 #include "amsl_navigation_msgs/Node.h"
@@ -28,8 +29,8 @@ class LocalGoalCreator
         void node_edge_map_callback(const amsl_navigation_msgs::NodeEdgeMap::ConstPtr& msg);
         void current_pose_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
         void local_goal_dist_callback(const std_msgs::Float64::ConstPtr& msg);
-        void reached_checkpoint_flag_callback(const std_msgs::Bool::ConstPtr& msg);
         bool skip_mode_flag_callback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res);
+        bool update_flag_callback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
         // other functions
         int get_index_from_node_id(int target_id);
@@ -68,13 +69,13 @@ class LocalGoalCreator
         ros::Subscriber checkpoint_sub_;
         ros::Subscriber node_edge_sub_;
         ros::Subscriber current_pose_sub_;
-        ros::Subscriber reached_checkpoint_flag_sub_;
         ros::Subscriber local_goal_dist_sub_;
         ros::Publisher local_goal_pub_;
         ros::Publisher current_checkpoint_id_pub_;
         ros::Publisher next_checkpoint_id_pub_;
         ros::Publisher path_pub_;
         ros::ServiceServer skip_mode_flag_server_;
+        ros::ServiceServer update_flag_server_;
         ros::ServiceClient task_stop_client_;
 };
 
