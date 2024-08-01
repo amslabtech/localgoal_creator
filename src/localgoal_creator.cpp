@@ -16,8 +16,7 @@ LocalGoalCreator::LocalGoalCreator() :
     local_goal_dist_sub_ = nh_.subscribe("/local_goal_dist", 1, &LocalGoalCreator::local_goal_dist_callback, this);
 
     local_goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/local_goal", 1);
-    current_checkpoint_id_pub_ = nh_.advertise<std_msgs::Int32>("/current_checkpoint", 1);
-    next_checkpoint_id_pub_ = nh_.advertise<std_msgs::Int32>("/next_checkpoint", 1);
+    edge_pub_ = local_nh_.advertise<amsl_navigation_msgs::Edge>("/edge", 1);
     path_pub_ = local_nh_.advertise<nav_msgs::Path>("path", 1);
 
     skip_mode_flag_server_ = local_nh_.advertiseService("skip_mode/avaliable", &LocalGoalCreator::skip_mode_flag_callback, this);
@@ -193,14 +192,12 @@ void LocalGoalCreator::publish_local_goal(geometry_msgs::Point point)
     local_goal_pub_.publish(local_goal_msg);
 }
 
-void LocalGoalCreator::publish_checkpoint_id()
+void LocalGoalCreator::publish_edge()
 {
-    std_msgs::Int32 current_checkpoint_id_msg;
-    std_msgs::Int32 next_checkpoint_id_msg;
-    current_checkpoint_id_msg.data = current_checkpoint_id_;
-    next_checkpoint_id_msg.data = next_checkpoint_id_;
-    current_checkpoint_id_pub_.publish(current_checkpoint_id_msg);
-    next_checkpoint_id_pub_.publish(next_checkpoint_id_msg);
+    amsl_navigation_msgs::Edge edge_msg;
+    edge_msg.node0_id = current_checkpoint_id_;
+    edge_msg.node1_id = next_checkpoint_id_;
+    edge_pub_.publish(edge_msg);
 }
 
 void LocalGoalCreator::publish_path()
@@ -270,7 +267,7 @@ void LocalGoalCreator::process()
             }
 
             publish_local_goal(current_pose_.pose.position);
-            publish_checkpoint_id();
+            publish_edge();
             publish_path();
             current_pose_updated_ = false;
 
