@@ -37,7 +37,7 @@ class LocalGoalCreator
         void update_checkpoint();
         void get_path_to_next_checkpoint();
         void publish_local_goal(geometry_msgs::Point point);
-        void publish_checkpoint_id();
+        void publish_edge();
         void publish_path();
         void call_task_stop();
 
@@ -71,8 +71,7 @@ class LocalGoalCreator
         ros::Subscriber current_pose_sub_;
         ros::Subscriber local_goal_dist_sub_;
         ros::Publisher local_goal_pub_;
-        ros::Publisher current_checkpoint_id_pub_;
-        ros::Publisher next_checkpoint_id_pub_;
+        ros::Publisher edge_pub_;
         ros::Publisher path_pub_;
         ros::ServiceServer skip_mode_flag_server_;
         ros::ServiceServer update_flag_server_;
