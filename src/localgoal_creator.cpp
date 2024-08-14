@@ -2,7 +2,8 @@
 
 LocalGoalCreator::LocalGoalCreator() :
     local_nh_("~"), checkpoint_received_(false), node_edge_map_received_(false), current_pose_updated_(false),
-    is_end_of_path_(false), update_checkpoint_flag_(false), available_skip_mode_(false), local_goal_index_(0)
+    is_end_of_path_(false), update_checkpoint_flag_(false), available_skip_mode_(false), restore_mode_flag_(false),
+    local_goal_index_(0)
 {
     local_nh_.param<int>("hz", hz_, 10);
     local_nh_.param<int>("start_node", start_node_, 0);
