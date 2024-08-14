@@ -15,7 +15,7 @@ LocalGoalCreator::LocalGoalCreator() :
     current_pose_sub_ = nh_.subscribe("/current_pose", 1, &LocalGoalCreator::current_pose_callback, this);
     local_goal_dist_sub_ = nh_.subscribe("/local_goal_dist", 1, &LocalGoalCreator::local_goal_dist_callback, this);
 
-    local_goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/local_goal", 1);
+    local_goal_pub_ = local_nh_.advertise<geometry_msgs::PoseStamped>("local_goal", 1);
     edge_pub_ = local_nh_.advertise<amsl_navigation_msgs::Edge>("/edge", 1);
     path_pub_ = local_nh_.advertise<nav_msgs::Path>("path", 1);
 
