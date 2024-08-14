@@ -179,6 +179,18 @@ void LocalGoalCreator::publish_local_goal(geometry_msgs::Point point)
     geometry_msgs::Point goal_point = path_.poses[local_goal_index_].pose.position;
     double distance_to_local_goal = hypot(goal_point.x - point.x, goal_point.y - point.y);
 
+    if (restore_mode_flag_)
+    {
+        while(local_goal_dist_ < distance_to_local_goal)
+        {
+            if (local_goal_index_ == 0)
+                break;
+            local_goal_index_--;
+            goal_point = path_.poses[local_goal_index_].pose.position;
+            distance_to_local_goal = hypot(goal_point.x - point.x, goal_point.y - point.y);
+        }
+    }
+
     while(distance_to_local_goal < local_goal_dist_)
     {
         local_goal_index_++;
