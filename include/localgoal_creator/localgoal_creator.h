@@ -30,6 +30,7 @@ class LocalGoalCreator
         void current_pose_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
         void local_goal_dist_callback(const std_msgs::Float64::ConstPtr& msg);
         bool skip_mode_flag_callback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res);
+        bool restore_mode_flag_callback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res);
         bool update_flag_callback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
         // other functions
@@ -50,6 +51,7 @@ class LocalGoalCreator
 
         // other params
         bool available_skip_mode_;
+        bool restore_mode_flag_;
         bool checkpoint_received_;
         bool node_edge_map_received_;
         bool current_pose_updated_;
@@ -74,6 +76,7 @@ class LocalGoalCreator
         ros::Publisher edge_pub_;
         ros::Publisher path_pub_;
         ros::ServiceServer skip_mode_flag_server_;
+        ros::ServiceServer restore_mode_flag_server_;
         ros::ServiceServer update_flag_server_;
         ros::ServiceClient task_stop_client_;
 };

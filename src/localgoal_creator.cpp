@@ -2,7 +2,8 @@
 
 LocalGoalCreator::LocalGoalCreator() :
     local_nh_("~"), checkpoint_received_(false), node_edge_map_received_(false), current_pose_updated_(false),
-    is_end_of_path_(false), update_checkpoint_flag_(false), available_skip_mode_(false), local_goal_index_(0)
+    is_end_of_path_(false), update_checkpoint_flag_(false), available_skip_mode_(false), restore_mode_flag_(false),
+    local_goal_index_(0)
 {
     local_nh_.param<int>("hz", hz_, 10);
     local_nh_.param<int>("start_node", start_node_, 0);
@@ -20,6 +21,7 @@ LocalGoalCreator::LocalGoalCreator() :
     path_pub_ = local_nh_.advertise<nav_msgs::Path>("path", 1);
 
     skip_mode_flag_server_ = local_nh_.advertiseService("skip_mode/avaliable", &LocalGoalCreator::skip_mode_flag_callback, this);
+    restore_mode_flag_server_ = local_nh_.advertiseService("restore_mode", &LocalGoalCreator::restore_mode_flag_callback, this);
     update_flag_server_ = local_nh_.advertiseService("update", &LocalGoalCreator::update_flag_callback, this);
     task_stop_client_ = nh_.serviceClient<std_srvs::SetBool>("/task/stop");
 
@@ -67,6 +69,17 @@ bool LocalGoalCreator::skip_mode_flag_callback(std_srvs::SetBool::Request &req, 
         res.message = "Skip mode is available";
     else
         res.message = "Skip mode is not available";
+    return true;
+}
+
+bool LocalGoalCreator::restore_mode_flag_callback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res)
+{
+    restore_mode_flag_ = req.data;
+    res.success = true;
+    if (restore_mode_flag_)
+        res.message = "Enable restore mode";
+    else
+        res.message = "Disable restore mode";
     return true;
 }
 
@@ -166,6 +179,18 @@ void LocalGoalCreator::publish_local_goal(geometry_msgs::Point point)
 {
     geometry_msgs::Point goal_point = path_.poses[local_goal_index_].pose.position;
     double distance_to_local_goal = hypot(goal_point.x - point.x, goal_point.y - point.y);
+
+    if (restore_mode_flag_)
+    {
+        while(local_goal_dist_ < distance_to_local_goal)
+        {
+            if (local_goal_index_ == 0)
+                break;
+            local_goal_index_--;
+            goal_point = path_.poses[local_goal_index_].pose.position;
+            distance_to_local_goal = hypot(goal_point.x - point.x, goal_point.y - point.y);
+        }
+    }
 
     while(distance_to_local_goal < local_goal_dist_)
     {
