@@ -20,6 +20,7 @@ LocalGoalCreator::LocalGoalCreator() :
     path_pub_ = local_nh_.advertise<nav_msgs::Path>("path", 1);
 
     skip_mode_flag_server_ = local_nh_.advertiseService("skip_mode/avaliable", &LocalGoalCreator::skip_mode_flag_callback, this);
+    restore_mode_flag_server_ = local_nh_.advertiseService("restore_mode", &LocalGoalCreator::restore_mode_flag_callback, this);
     update_flag_server_ = local_nh_.advertiseService("update", &LocalGoalCreator::update_flag_callback, this);
     task_stop_client_ = nh_.serviceClient<std_srvs::SetBool>("/task/stop");
 
@@ -67,6 +68,17 @@ bool LocalGoalCreator::skip_mode_flag_callback(std_srvs::SetBool::Request &req, 
         res.message = "Skip mode is available";
     else
         res.message = "Skip mode is not available";
+    return true;
+}
+
+bool LocalGoalCreator::restore_mode_flag_callback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res)
+{
+    restore_mode_flag_ = req.data;
+    res.success = true;
+    if (restore_mode_flag_)
+        res.message = "Enable restore mode";
+    else
+        res.message = "Disable restore mode";
     return true;
 }
 
